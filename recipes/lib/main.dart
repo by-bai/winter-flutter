@@ -1,30 +1,37 @@
 import 'package:flutter/material.dart';
+import 'recipe.dart';
+import 'recipe_detail.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() { // entry point for the code when the app launches
+  runApp(const RecipeApp()); // tells Flutter which is the top-level widget for the app
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+// simple UI changes -> hot reload
+// significant changes like adding new property to a state or changed main() requires -> hot restart
+// so that the new change is detected and included in the new build
+// bigger changes like adding dependencies/assets require -> full build and run
 
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+class RecipeApp extends StatelessWidget { // StatelessWidget doesn't change after you build it
+  const RecipeApp({Key? key}) : super(key: key);
+
+  // 1
+  @override // tells the Dart analyzer that this method is supposed to replace the default method from StatelessWidget
+  Widget build(BuildContext context) { // a widget's build() method = entry point for composing together other widgets to make a new widget
+    // 2
+    final ThemeData theme = ThemeData(); // theme determines visual aspects like color. default ThemeData will show standard Material defaults
+    // 3
+    return MaterialApp( // uses Material Design and is the widget that will be included in RecipeApp
+      // 4
+      title: 'Recipe Calculator', // desc that devices uses to identify the app. UI won't display this
+      // 5
+      theme: theme.copyWith( // copy theme and replace the color scheme with an updated copy
+        colorScheme: theme.colorScheme.copyWith(
+          primary: Colors.grey,
+          secondary: Colors.black,
+        ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      // 6
+      home: const MyHomePage(title: 'Recipe Calculator'), //MyHomePage widget
     );
   }
 }
@@ -48,68 +55,79 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
+    // 1
+    return Scaffold( // scaffold provides high-level structure for a screen. 2 properties = appbar + body
+      // 2
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text(widget.title), // Text widget with title passed in from home: MyHomePage(title: 'Recipe Calculator')
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
+      // 3
+      body: SafeArea( // keeps app away from OS interfaces
+        // 4
+        child: ListView.builder( // build list using ListView
+          // 5
+          itemCount: Recipe.samples.length, // itemCount determines # of rows the list has - .length is the # of objects in the list
+          // 6
+          itemBuilder: (BuildContext context, int index) { // builds widget tree for each row
+            // 7
+            return GestureDetector( // detects gestures
+              // 8
+              onTap: () { // callback when widget is tapped
+                // 9
+                Navigator.push( // manages a stack of pages
+                  context,
+                  MaterialPageRoute( // calling push() will push a new Material page ont othe stack
+                    builder: (context) { // creates destination page widget
+                      // 10
+                      return RecipeDetail(recipe: Recipe.samples[index]);
+                      return Text('Detail page');
+                    },
+                  ),
+                );
+              },
+              // 11
+              child: buildRecipeCard(Recipe.samples[index]),
+            );
+            return buildRecipeCard(Recipe.samples[index]);
+            return Text(Recipe.samples[index].label); // display name of recipe
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget buildRecipeCard(Recipe recipe) {
+    return Card(
+      // 1
+      elevation: 2.0, // how high the card is off the screen - shadow
+      // 2
+      shape: RoundedRectangleBorder( // rounded rect with 10.0 corner radius
+          borderRadius: BorderRadius.circular(10.0)),
+      // 3
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        // 4
+        child: Column( // col is a widget that defines vertical layout
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+            Image(image: AssetImage(recipe.imageUrl)), // AssetImage states that image is fetched from local asset bundle defined in pubspec.yaml
+            // 5
+            const SizedBox(
+              height: 14.0,
             ),
+            // 6
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
+              recipe.label,
+              style: const TextStyle( // customise Text widget with a style object
+                fontSize: 20.0,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Palatino',
+              ),
+            )
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
